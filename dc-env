@@ -1,0 +1,68 @@
+#!/bin/bash
+# subshell.sh
+
+show_help() {
+echo "Usage: $0 [options one] MRVERSION"
+echo "Options: [defaults in brackets after descriptions]"
+echo
+echo "Standard options:"
+echo "  --help                           print this message"
+echo ""
+echo "Examples"
+echo "  $ ./dc-env MRVersion"
+echo "  ex)$ ./dc-env mr13"
+echo "  If you want to exit the subshell."
+echo "  $ exit or ctrl + D "
+}
+
+TMPDIR=/tmp
+CUR_PATH=$PWD
+MAC_PATH="/usr/local/opt"
+LINUX_PATH="/opt/darkmatter"
+LIBDARKPREFIX=""
+VERSION=""
+MRVERSIONS=""
+ADD="libdarkclient-darksuite"
+BUILD_PLATFORM=`uname -s`
+ADD_PATH=$MAC_PATH
+COUNT=0
+ANSIRED="\033[31m"
+ANSIEND="\033[0m"
+REALLY_MRVERSION=$1
+
+if [[ $BUILD_PLATFORM == "Darwin" ]]; then
+	ADD_PATH=$MAC_PATH
+	MRVERSIONS=$(echo "$REALLY_MRVERSION" | sed 's/mr1/1./g')
+    LIBDARKPREFIX=$ADD_PATH$ADD\@$MRVERSIONS
+    echo "MRVERSIONS : $MRVERSIONS"
+    echo "libdark path : $LIBDARKPREFIX"
+elif [[ $BUILD_PLATFORM == "Linux" ]]; then
+	ADD_PATH=$LINUX_PATH
+	MRVERSIONS=$(echo "$REALLY_MRVERSION")
+    LIBDARKPREFIX=$ADD_PATH/$MRVERSIONS
+    echo "MRVERSIONS : $MRVERSIONS"
+    echo "LibDC path : $LIBDARKPREFIX"
+fi
+
+if [[ $1 == "--help" ]]; then
+	show_help
+else
+	if [[ -d $LIBDARKPREFIX ]]; then
+		if [[ $VERSION == "" ]]; then
+			export PS1="libdarkclient@$ANSIRED"$MRVERSIONS"$ANSIEND\$ "
+            export LIBDARKPREFIX=$LIBDARKPREFIX
+			export PATH=$LIBDARKPREFIX/bin:$PATH
+            if [[ $BUILD_PLATFORM == "Darwin" ]]; then
+			    export DYLD_LIBRARY_PATH=$LIBDARKPREFIX/lib:$DYLD_LIBRARY_PATH
+            elif [[ $BUILD_PLATFORM == "Linux" ]]; then
+			    export LD_LIBRARY_PATH=$LIBDARKPREFIX/lib:$LD_LIBRARY_PATH
+            fi
+			bash
+		fi
+	else
+		echo "You have not versions."
+	fi
+fi
+if [[ "$#" == 0 || "$#" > 1 ]]; then
+	show_help
+fi
